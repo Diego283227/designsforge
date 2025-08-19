@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "../button";
-import { RegisterModal } from "@/components/modals/register-modal";
-import { LoginModal } from "@/components/modals/login-modal"; // Importar el LoginModal
+import { RegisterModal } from "../../modals/register-modal";
+import { LoginModal } from "../../modals/login-modal";
+
 
 export default function Header() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -17,7 +18,7 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="text-white text-2xl font-bold">
-              Canva
+            MyApp
             </a>
           </div>
 
