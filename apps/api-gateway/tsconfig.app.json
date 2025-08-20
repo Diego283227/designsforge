@@ -5,6 +5,8 @@
     "types": [
       "node"
     ],
+    "lib": ["es2022", "dom"],
+    "target": "es2022",
     "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
   },
