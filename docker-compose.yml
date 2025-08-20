@@ -1,0 +1,178 @@
+version: '3.8'
+
+services:
+  # Redis para eventos y cache
+  redis:
+    image: redis:7-alpine
+    container_name: designsforge_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Auth Service Database
+  db-auth:
+    image: postgres:15-alpine
+    container_name: designsforge_db_auth
+    environment:
+      POSTGRES_DB: designsforge_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+      - ./scripts/init-auth-db.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d designsforge_auth"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Canvas Service Database
+  db-canvas:
+    image: postgres:15-alpine
+    container_name: designsforge_db_canvas
+    environment:
+      POSTGRES_DB: designsforge_canvas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5433:5432"
+    volumes:
+      - canvas_data:/var/lib/postgresql/data
+      - ./scripts/init-canvas-db.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d designsforge_canvas"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # AI Service Database
+  db-ai:
+    image: postgres:15-alpine
+    container_name: designsforge_db_ai
+    environment:
+      POSTGRES_DB: designsforge_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5434:5432"
+    volumes:
+      - ai_data:/var/lib/postgresql/data
+      - ./scripts/init-ai-db.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d designsforge_ai"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Payment Service Database
+  db-payment:
+    image: postgres:15-alpine
+    container_name: designsforge_db_payment
+    environment:
+      POSTGRES_DB: designsforge_payment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+      - ./scripts/init-payment-db.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d designsforge_payment"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Admin Service Database
+  db-admin:
+    image: postgres:15-alpine
+    container_name: designsforge_db_admin
+    environment:
+      POSTGRES_DB: designsforge_admin
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5436:5432"
+    volumes:
+      - admin_data:/var/lib/postgresql/data
+      - ./scripts/init-admin-db.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d designsforge_admin"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (Opcional - para administrar todas las DBs)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: designsforge_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@designsforge.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db-auth
+      - db-canvas
+      - db-ai
+      - db-payment
+      - db-admin
+    restart: unless-stopped
+
+  # Redis Insight (Opcional - para administrar Redis)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: designsforge_redis_insight
+    ports:
+      - "8001:8001"
+    volumes:
+      - redis_insight_data:/db
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  auth_data:
+    driver: local
+  canvas_data:
+    driver: local
+  ai_data:
+    driver: local
+  payment_data:
+    driver: local
+  admin_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_insight_data:
+    driver: local
+
+networks:
+  default:
+    name: designsforge_network
+    driver: bridge
